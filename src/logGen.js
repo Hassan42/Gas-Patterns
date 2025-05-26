@@ -1,13 +1,13 @@
 const fs = require('fs');
 
-const NUM_TRACES = 500;
-const MAX_ITEMS = 10;
-const BALANCE_SUFFICIENCY_CHANCE = 0.7;
+const NUM_TRACES = 500; //500
+const MAX_ITEMS = 10; //10
+const BALANCE_SUFFICIENCY_CHANCE = 0.6;  //0.7
 
 // Helpers
 const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const randFloat = (min, max) => +(Math.random() * (max - min) + min).toFixed(4);
-const randBool = () => Math.random() < 0.5;
+const randBool = () => Math.random() < 0.2;
 const randAddress = () => `${randInt(100, 999)} ${['Main St', 'Oak Ave', 'Pine Rd', 'Maple Blvd'][randInt(0, 3)]}`;
 const randFundingAmount = () => randFloat(1, 1);
 
@@ -108,6 +108,21 @@ function generateRandomTrace(index) {
 
     const isSuccess = quantities.every((qty, i) => qty <= stockLevels[i]);
     if (isSuccess) break;
+  }
+
+  const lastAttempt = attempts[attempts.length - 1];
+  const isLastSuccess = lastAttempt.quantities.every((qty, i) => qty <= stockLevels[i]);
+
+  if (!isLastSuccess) {
+    const validQuantities = stockLevels.map((stock, i) =>
+      fixedQuantities[i] !== null ? fixedQuantities[i] : randInt(1, stock)
+    );
+
+    attempts.push({
+      attempt: attempts.length,
+      itemIds: Array.from({ length: numItems }, (_, j) => j + 1),
+      quantities: validQuantities
+    });
   }
 
   return {

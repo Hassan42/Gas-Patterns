@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
+contract RefundGasExec {
     enum State {
         Closed,
         Open,
@@ -73,22 +73,22 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
 
     event Event_15b3i41(uint256 orderId, uint256[] unavailableItemIds);
 
-    event Event_0hk6axb(uint256 orderid);
+    // event Event_0hk6axb(uint256 orderid);
 
     event Event_0hk6axy(uint256 orderid);
 
-    event RefundEvent(string user, uint256 amountRefunded, uint256 gasUsed); // Refund Event
+    event RefundEvent(string user, uint256 amountRefunded); // Refund Event
 
     constructor() {
         state["Activity_0fun8ap"] = State.Open;
         state["Activity_0niv12y"] = State.Closed;
-        state["Activity_1vaacll"] = State.Closed;
+        // state["Activity_1vaacll"] = State.Closed;
         state["Activity_0k0x70l"] = State.Closed;
         state["Activity_1hhx3o3"] = State.Closed;
 
         activitytoRole["Activity_0fun8ap"] = ["Retailer"];
         activitytoRole["Activity_0niv12y"] = ["Customer"];
-        activitytoRole["Activity_1vaacll"] = ["Customer"];
+        // activitytoRole["Activity_1vaacll"] = ["Customer"];
         activitytoRole["Activity_0k0x70l"] = ["Customs"];
         activitytoRole["Activity_1hhx3o3"] = ["Logistics"];
         activitytoRole["Activity_0nflsru"] = ["Retailer"];
@@ -105,9 +105,9 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
     }
 
     //Order Delivered
-    function emit_Event_0hk6axb(uint256 orderid) public {
-        emit Event_0hk6axb(orderid);
-    }
+    // function emit_Event_0hk6axb(uint256 orderid) public {
+    //     emit Event_0hk6axb(orderid);
+    // }
 
     //Custom Clearance
     function emit_Event_0hk6axy(uint256 orderid) public {
@@ -189,37 +189,35 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
         string memory deliveryAddress
     ) public payable isAccessible("Activity_0niv12y") {
         uint256 startGas = gasleft();
-        uint256 total = compute_total(itemIds, quantities);
-        uint256 branch = checkXOR_Gateway_06a3ggk(total);
-        if ((branch & (1 << 1)) != 0) {
-            uint256 orderId = Activity_11y12ie(domestic, deliveryAddress);
-            bool isAvailable = Activity_1ojqh22(orderId, itemIds, quantities);
+        // uint256 branch = checkXOR_Gateway_06a3ggk(total);
+        // if ((branch & (1 << 1)) != 0) {
+        uint256 orderId = Activity_11y12ie(domestic, deliveryAddress);
+        bool isAvailable = Activity_1ojqh22(orderId, itemIds, quantities);
 
-            uint256 branch = checkXOR_Gateway_1vn0uda(isAvailable);
+        uint256 branch = checkXOR_Gateway_1vn0uda(isAvailable);
+        if ((branch & (1 << 0)) != 0) {
+            revert("End Event reached: Event_0blgw5f, out of stock");
+        } else if ((branch & (1 << 1)) != 0) {
+            uint256 total = compute_total(itemIds, quantities);
+            Activity_13zf3km(total);
+            uint256 branch = checkXOR_Gateway_1p6hag5(orders[orderId].domestic);
             if ((branch & (1 << 0)) != 0) {
-                state["Activity_1vaacll"] = State.Open;
+                state["Activity_0k0x70l"] = State.Open;
             } else if ((branch & (1 << 1)) != 0) {
-                Activity_13zf3km(total);
-                uint256 branch = checkXOR_Gateway_1p6hag5(
-                    orders[orderId].domestic
-                );
-                if ((branch & (1 << 0)) != 0) {
-                    state["Activity_0k0x70l"] = State.Open;
-                } else if ((branch & (1 << 1)) != 0) {
-                    state["Activity_1hhx3o3"] = State.Open;
-                }
+                state["Activity_1hhx3o3"] = State.Open;
             }
-        } else if ((branch & (1 << 0)) != 0) {
-            //Out of balance
-            revert("End Event reached: Event_0blgw7w, undefined");
         }
+        // } else if ((branch & (1 << 0)) != 0) {
+        //     //Out of balance
+        //     revert("End Event reached: Event_0blgw7w, undefined");
+        // }
 
         if (!isGasUser[msg.sender]) {
             gasUsers.push(msg.sender);
             isGasUser[msg.sender] = true;
         }
         state["Activity_0niv12y"] = State.Completed;
-        gasUsedByUser[msg.sender] += (startGas - gasleft()) + 3300;
+        gasUsedByUser[msg.sender] += (startGas - gasleft()) + 21000;
     }
 
     //Create Order
@@ -279,41 +277,41 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
     }
 
     //Modify Items
-    function Activity_1vaacll(
-        uint256 orderId,
-        uint256[] memory itemIds,
-        uint256[] memory quantities
-    ) public payable isAccessible("Activity_1vaacll") {
-        uint256 startGas = gasleft();
-        uint256 total = compute_total(itemIds, quantities);
-        uint256 branch = checkXOR_Gateway_06a3ggk(total);
-        if ((branch & (1 << 0)) != 0) {
-            //Unsufficient ETH
-            revert("End Event reached: Event_0blgw7w, undefined");
-        } else if ((branch & (1 << 1)) != 0) {
-            bool isAvailable = Activity_1ojqh22(orderId, itemIds, quantities);
-            uint256 branch = checkXOR_Gateway_1vn0uda(isAvailable);
-            if ((branch & (1 << 0)) != 0) {
-                state["Activity_1vaacll"] = State.Open;
-            } else if ((branch & (1 << 1)) != 0) {
-                Activity_13zf3km(total);
-                uint256 branch = checkXOR_Gateway_1p6hag5(
-                    orders[orderId].domestic
-                );
-                if ((branch & (1 << 0)) != 0) {
-                    state["Activity_0k0x70l"] = State.Open;
-                } else if ((branch & (1 << 1)) != 0) {
-                    state["Activity_1hhx3o3"] = State.Open;
-                }
-            }
-        }
+    // function Activity_1vaacll(
+    //     uint256 orderId,
+    //     uint256[] memory itemIds,
+    //     uint256[] memory quantities
+    // ) public payable isAccessible("Activity_1vaacll") {
+    //     // uint256 startGas = gasleft();
+    //     uint256 total = compute_total(itemIds, quantities);
+    //     // uint256 branch = checkXOR_Gateway_06a3ggk(total);
+    //     // if ((branch & (1 << 0)) != 0) {
+    //         //Unsufficient ETH
+    //         // revert("End Event reached: Event_0blgw7w, undefined");
+    //     // } else if ((branch & (1 << 1)) != 0) {
+    //         bool isAvailable = Activity_1ojqh22(orderId, itemIds, quantities);
+    //         uint256 branch = checkXOR_Gateway_1vn0uda(isAvailable);
+    //         if ((branch & (1 << 0)) != 0) {
+    //             state["Activity_1vaacll"] = State.Open;
+    //         } else if ((branch & (1 << 1)) != 0) {
+    //             Activity_13zf3km(total);
+    //             uint256 branch = checkXOR_Gateway_1p6hag5(
+    //                 orders[orderId].domestic
+    //             );
+    //             if ((branch & (1 << 0)) != 0) {
+    //                 state["Activity_0k0x70l"] = State.Open;
+    //             } else if ((branch & (1 << 1)) != 0) {
+    //                 state["Activity_1hhx3o3"] = State.Open;
+    //             }
+    //         }
+    //     // }
 
-        if (!isGasUser[msg.sender]) {
-            gasUsers.push(msg.sender);
-            isGasUser[msg.sender] = true;
-        }
-        gasUsedByUser[msg.sender] += (startGas - gasleft()) + 3300;
-    }
+    //     // if (!isGasUser[msg.sender]) {
+    //     //     gasUsers.push(msg.sender);
+    //     //     isGasUser[msg.sender] = true;
+    //     // }
+    //     // gasUsedByUser[msg.sender] += (startGas - gasleft()) + 21000 ;
+    // }
 
     //Make payments
     function Activity_13zf3km(uint256 total) public payable {
@@ -343,18 +341,17 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
     }
 
     //Update Order status
-    // function Activity_1gto5jv(uint256 orderId) public payable {
-    //     require(uint256(state["Activity_0k0x70l"]) == uint256(State.Open));
-    //     orders[orderId].clearance = true;
-    // }
+    function Activity_1gto5jv(uint256 orderId) public payable {
+        require(uint256(state["Activity_0k0x70l"]) == uint256(State.Open));
+        orders[orderId].clearance = true;
+    }
 
     //Order Delivered
     function Activity_1hhx3o3(
         uint256 orderId
     ) public payable isAccessible("Activity_1hhx3o3") {
         uint256 startGas = gasleft();
-
-        emit_Event_0hk6axb(orderId);
+        Activity_1gto5jr(orderId);
 
         state["Activity_0nflsru"] = State.Open;
         state["Activity_1hhx3o3"] = State.Completed;
@@ -363,10 +360,16 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
             gasUsers.push(msg.sender);
             isGasUser[msg.sender] = true;
         }
-        gasUsedByUser[msg.sender] += (startGas - gasleft()) + 3300;
+
+        gasUsedByUser[msg.sender] += (startGas - gasleft()) + 21000;
     }
 
-    //Release Escrow
+    function Activity_1gto5jr(uint256 orderId) public payable {
+        require(uint256(state["Activity_1hhx3o3"]) == uint256(State.Open));
+        orders[orderId].clearance = true;
+    }
+
+    // Release Escrow
     function Activity_0nflsru()
         public
         payable
@@ -403,7 +406,7 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
                     uint256 refundAmount = gasUsedByUser[user] * gasPriceInWei;
                     if (refundAmount > 0) {
                         payable(user).transfer(refundAmount);
-                        emit RefundEvent(addressToRole[user], refundAmount, gasUsedByUser[user] * gasPriceInWei); // Emit refund event
+                        emit RefundEvent(addressToRole[user], refundAmount); // Emit refund event
                     }
                 }
             }
@@ -417,7 +420,7 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
                         totalDeposited;
                     if (refundShare > 0) {
                         payable(user).transfer(refundShare);
-                        emit RefundEvent(addressToRole[user], refundShare, gasUsedByUser[user] * gasPriceInWei); // Emit refund event
+                        emit RefundEvent(addressToRole[user], refundShare); // Emit refund event
                     }
                 }
             }
@@ -434,7 +437,7 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
                         payable(user).transfer(proportionalRefund);
                         emit RefundEvent(
                             addressToRole[user],
-                            proportionalRefund, gasUsedByUser[user] * gasPriceInWei
+                            proportionalRefund
                         ); // Emit refund event
                     }
                 }
@@ -464,20 +467,20 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
     }
 
     //ETH check
-    function checkXOR_Gateway_06a3ggk(
-        uint256 total
-    ) public payable returns (uint256) {
-        require(
-            uint256(state["Activity_0niv12y"]) == uint256(State.Open) ||
-                uint256(state["Activity_1vaacll"]) == uint256(State.Open)
-        );
+    // function checkXOR_Gateway_06a3ggk(
+    //     uint256 total
+    // ) public payable returns (uint256) {
+    //     require(
+    //         uint256(state["Activity_0niv12y"]) == uint256(State.Open) ||
+    //             uint256(state["Activity_1vaacll"]) == uint256(State.Open)
+    //     );
 
-        if (msg.value < total) {
-            return (1 << 0); // Branch 0
-        } else if (msg.value >= total) {
-            return (1 << 1); // Branch 1
-        }
-    }
+    //     if (msg.value < total) {
+    //         return (1 << 0); // Branch 0
+    //     } else if (msg.value >= total) {
+    //         return (1 << 1); // Branch 1
+    //     }
+    // }
 
     //Item Unavailable
     function checkXOR_Gateway_1vn0uda(

@@ -1,6 +1,8 @@
 const { ethers } = require("hardhat");
 const fs = require("fs");
 
+let gasPrice = 1000000008;
+
 async function deployContract(admin, ContractFactory) {
   const deployTx = await ContractFactory.getDeployTransaction();
   const txResponse = await admin.sendTransaction(deployTx);
@@ -22,8 +24,17 @@ const latestGasUsedFromBlock = async (senderAddress) => {
   }
 
   const receipt = await ethers.provider.getTransactionReceipt(lastUserTx.hash);
+
+  // const gasPrice = lastUserTx.gasPrice 
+  // ? Number(lastUserTx.gasPrice) 
+  // : (lastUserTx.maxFeePerGas ? Number(lastUserTx.maxFeePerGas) : null);
+
+
+  // console.log(gasPrice)
+
+
   return Number(receipt.gasUsed);
-};
+}
 
 async function setResources(contract, admin, activityToRole, roleToSigner) {
   for (const role of new Set(Object.values(activityToRole))) {
@@ -46,7 +57,7 @@ async function fundContract(contract, signer, amount) {
 
   const receipt = await tx.wait();
 
-  return {gasUsed: Number(receipt.gasUsed), gasPrice: receipt.gasPrice};
+  return { gasUsed: Number(receipt.gasUsed), gasPrice: gasPrice };
 }
 
 async function attemptOrderPartial(contract, trace, roleToSigner, activityToRole, orderId = 0) {
@@ -92,7 +103,7 @@ async function attemptOrderPartial(contract, trace, roleToSigner, activityToRole
       const gasUsed = Number(receipt.gasUsed);
       gasUsedByAttempt.push(gasUsed);
       totalGasUsed += gasUsed;
-      totalGasTotal += gasUsed * Number(receipt.gasPrice); 
+      totalGasTotal += gasUsed * gasPrice;
       txCount++;
 
       const parsedEvents = receipt.logs.map(log => {
@@ -116,6 +127,7 @@ async function attemptOrderPartial(contract, trace, roleToSigner, activityToRole
       const fallbackGasUsed = await latestGasUsedFromBlock(signer.address);
       gasUsedByAttempt.push(fallbackGasUsed);
       totalGasUsed += fallbackGasUsed;
+      totalGasTotal += fallbackGasUsed * gasPrice;
       txCount++;
 
       // If balance is insufficient, we simply break out of the loop
@@ -171,7 +183,7 @@ async function attemptOrderFullResend(contract, trace, roleToSigner, activityToR
       gasUsedByAttempt.push(gasUsed);
       totalGasUsed += gasUsed;
       txCount++;
-      return { orderId: orderId, totalGasUsed, gasUsedByAttempt, txCount, gasPrice: receipt.gasPrice };
+      return { orderId: orderId, totalGasUsed, gasUsedByAttempt, txCount, gasPrice: gasPrice };
     } catch (error) {
       // Fallback gas usage (since the tx is going to fail due to insufficient balance)
       const fallbackGasUsed = await latestGasUsedFromBlock(signer.address);
@@ -186,7 +198,7 @@ async function attemptOrderFullResend(contract, trace, roleToSigner, activityToR
     }
   }
 
-  return { orderId: orderId, totalGasUsed, gasUsedByAttempt, txCount};
+  return { orderId: orderId, totalGasUsed, gasUsedByAttempt, txCount };
 }
 
 async function handleCustoms(contract, trace, orderId, roleToSigner, activityToRole) {
@@ -195,23 +207,15 @@ async function handleCustoms(contract, trace, orderId, roleToSigner, activityToR
   const customs = roleToSigner[activityToRole["Activity_0k0x70l"]];
   const tx = await contract.connect(customs).Activity_0k0x70l(orderId);
   const receipt = await tx.wait();
-  return { gasUsed: Number(receipt.gasUsed), txCount: 1, gasPrice: receipt.gasPrice };
+  return { gasUsed: Number(receipt.gasUsed), txCount: 1, gasPrice: gasPrice };
 }
 
 async function handleDelivery(contract, orderId, roleToSigner, activityToRole) {
   const logistics = roleToSigner[activityToRole["Activity_1hhx3o3"]];
   const tx = await contract.connect(logistics).Activity_1hhx3o3(orderId);
   const receipt = await tx.wait();
-  return { gasUsed: Number(receipt.gasUsed), txCount: 1, gasPrice: receipt.gasPrice };
+  return { gasUsed: Number(receipt.gasUsed), txCount: 1, gasPrice: gasPrice };
 }
-
-// async function handleRefund(contract, orderId, roleToSigner, activityToRole) {
-//   const retailer = roleToSigner[activityToRole["Activity_0nflsru"]];
-//   const tx = await contract.connect(retailer).Activity_0nflsru();
-//   const receipt = await tx.wait();
-//   return { gasUsed: Number(receipt.gasUsed), txCount: 1 };
-// }
-
 
 async function handleRefund(contract, orderId, roleToSigner, activityToRole, fundDistribution) {
   const retailer = roleToSigner[activityToRole["Activity_0nflsru"]];
@@ -241,7 +245,7 @@ async function handleRefund(contract, orderId, roleToSigner, activityToRole, fun
     }
   });
 
-  return { gasUsed: Number(receipt.gasUsed), txCount: 1, gasPrice: receipt.gasPrice };
+  return { gasUsed: Number(receipt.gasUsed), txCount: 1, gasPrice: gasPrice };
 }
 
 async function processTraceWithContract(trace, contractName, attemptFn, roleToSigner, activityToRole, admin, isFull) {
@@ -269,9 +273,9 @@ async function processTraceWithContract(trace, contractName, attemptFn, roleToSi
 
   if (isFull) {
     const funder = roleToSigner[activityToRole["Activity_0fun8ap"]];
-    const { gasUsed: fundGas, gasPrice: fundGasPrice }  = await fundContract(contract, funder, trace.fundingAmount);
+    const { gasUsed: fundGas, gasPrice: fundGasPrice } = await fundContract(contract, funder, trace.fundingAmount);
     gasByFunction.fundContract = fundGas;
-    fundDistribution.gasUsedByParticipant["retailer"] = fundGas * Number(fundGasPrice);
+    fundDistribution.gasUsedByParticipant["retailer"] = fundGas * gasPrice;
     fundDistribution.fundedAmount["retailer"] = trace.fundingAmount;
     txCount++;
   }
@@ -286,20 +290,23 @@ async function processTraceWithContract(trace, contractName, attemptFn, roleToSi
 
   if (trace.balanceSufficient) {
 
-    const { gasUsed: customsGas, txCount: customsTx, gasPrice: handleGasPrice } = await handleCustoms(contract, trace, orderId, roleToSigner, activityToRole);
-    gasByFunction.customsClearance = customsGas;
-    fundDistribution.gasUsedByParticipant["customs"] = customsGas * Number(handleGasPrice);
-    txCount += customsTx;
+    if (!trace.domestic) {
+      const { gasUsed: customsGas, txCount: customsTx, gasPrice: handleGasPrice } = await handleCustoms(contract, trace, orderId, roleToSigner, activityToRole);
+      gasByFunction.customsClearance = customsGas;
+      fundDistribution.gasUsedByParticipant["customs"] = customsGas * gasPrice;
+      txCount += customsTx;
+    }
 
     const { gasUsed: deliveryGas, txCount: deliveryTx, gasPrice: deliveryGasPrice } = await handleDelivery(contract, orderId, roleToSigner, activityToRole);
     gasByFunction.orderDelivered = deliveryGas;
-    fundDistribution.gasUsedByParticipant["logistics"] = deliveryGas * Number(deliveryGasPrice);
+    fundDistribution.gasUsedByParticipant["logistics"] = deliveryGas * gasPrice;
     txCount += deliveryTx;
 
     if (isFull) {
       const { gasUsed: refundGas, txCount: refundTx, gasPrice: refundGasPrice } = await handleRefund(contract, orderId, roleToSigner, activityToRole, fundDistribution);
       gasByFunction.refundGas = refundGas;
-      fundDistribution.gasUsedByParticipant["retailer"] = refundGas * Number(refundGasPrice);
+      fundDistribution.gasUsedByParticipant["retailer"] =
+        (fundDistribution.gasUsedByParticipant["retailer"] || 0) + refundGas * gasPrice;
       txCount += refundTx;
     }
 
@@ -318,11 +325,71 @@ async function processTraceWithContract(trace, contractName, attemptFn, roleToSi
   };
 }
 
+
+async function compositionExecution(traces, roleToSigner, activityToRole, admin) {
+  const contractsToDeploy = [
+    "EventLoggingExec",
+    "GuardCheckExec",
+    "PartialRecoveryExec",
+    "RefundGasExec",
+  ];
+
+  const stats = {};
+
+  for (const contractName of contractsToDeploy) {
+    stats[contractName] = {
+      totalGasUsed: 0,
+      totalTransactions: 0,
+      tracesProcessed: 0,
+    };
+
+    for (const trace of traces) {
+      let attemptFn;
+      let lastParam = false;
+
+      if (contractName === "PartialRecoveryExec") {
+        attemptFn = attemptOrderPartial;
+        lastParam = false;
+      } else if (contractName === "RefundGasExec") {
+        attemptFn = attemptOrderFullResend;
+        lastParam = true;
+      } else {
+        attemptFn = attemptOrderFullResend;
+        lastParam = false;
+      }
+
+      const result = await processTraceWithContract(
+        trace,
+        contractName,
+        attemptFn,
+        roleToSigner,
+        activityToRole,
+        admin,
+        lastParam
+      );
+
+      stats[contractName].totalGasUsed += result.totalGasUsed;
+      stats[contractName].totalTransactions += result.txCount;
+      stats[contractName].tracesProcessed += 1;
+    }
+
+    stats[contractName].averageGasUsedPerTransaction =
+      stats[contractName].totalTransactions > 0
+        ? stats[contractName].totalGasUsed / stats[contractName].totalTransactions
+        : 0;
+  }
+
+  fs.writeFileSync("execution-composition-gas-stats.json", JSON.stringify({ stats }, null, 2));
+
+  console.log("\n=== Composition gas stats written to composition-gas-stats.json ===");
+  console.log(stats);
+}
+
+
 async function main() {
 
 
-  const gasPrice = (await ethers.provider.getFeeData()).gasPrice;
-  console.log(gasPrice)
+  // gasPrice = Number((await ethers.provider.getFeeData()).gasPrice);
 
 
 
@@ -347,6 +414,8 @@ async function main() {
     "Activity_1hhx3o3": "Logistics",
     "Activity_0nflsru": "Retailer",
   };
+
+  // await compositionExecution(traces, roleToSigner, activityToRole, admin);
 
   const stats = {
     full: {
@@ -404,7 +473,7 @@ async function main() {
     });
 
     for (const [user, amount] of Object.entries(fullRes.fundDistribution.fundedAmount)) {
-      if (Object.keys(fullRes.fundDistribution.refundedAmount).length === 0){continue;}
+      if (Object.keys(fullRes.fundDistribution.refundedAmount).length === 0) { continue; }
       stats.full.totalFundedAmount[user] = (stats.full.totalFundedAmount[user] || 0) + amount;
     }
 
@@ -413,7 +482,7 @@ async function main() {
     }
 
     for (const [user, gas] of Object.entries(fullRes.fundDistribution.gasUsedByParticipant)) {
-      stats.full.totalGasUsedByParticipant[user] = (stats.full.totalGasUsedByParticipant[user] || 0) + gas;
+      stats.full.totalGasUsedByParticipant[user] = (Number(stats.full.totalGasUsedByParticipant[user]) || 0) + gas;
     }
 
     const baseRes = await processTraceWithContract(
@@ -493,6 +562,8 @@ async function main() {
   console.log("\n=== Comparison stats: ===");
   console.log(comparisonStats);
 }
+
+
 
 main().catch((err) => {
   console.error(err);

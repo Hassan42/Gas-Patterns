@@ -1,0 +1,28 @@
+{
+  "stats": {
+    "EventLoggingExec": {
+      "totalGasUsed": 1851196346,
+      "totalTransactions": 7185,
+      "tracesProcessed": 1000,
+      "averageGasUsedPerTransaction": 257647.3689631176
+    },
+    "GuardCheckExec": {
+      "totalGasUsed": 1941852834,
+      "totalTransactions": 7185,
+      "tracesProcessed": 1000,
+      "averageGasUsedPerTransaction": 270264.83423799585
+    },
+    "PartialRecoveryExec": {
+      "totalGasUsed": 957745402,
+      "totalTransactions": 9228,
+      "tracesProcessed": 1000,
+      "averageGasUsedPerTransaction": 103786.88794971825
+    },
+    "RefundGasExec": {
+      "totalGasUsed": 2223369176,
+      "totalTransactions": 8896,
+      "tracesProcessed": 1000,
+      "averageGasUsedPerTransaction": 249929.08902877697
+    }
+  }
+}

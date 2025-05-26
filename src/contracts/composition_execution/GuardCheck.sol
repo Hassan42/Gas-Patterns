@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
+contract GuardCheckExec {
     enum State {
         Closed,
         Open,
@@ -37,11 +37,11 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
     mapping(uint256 => uint256) public stock;
     mapping(uint256 => uint256) public prices;
 
-    mapping(address => uint256) public depositedGas;
-    mapping(address => uint256) public gasUsedByUser;
-    address[] public gasUsers;
-    mapping(address => bool) public isGasUser;
-    uint256 public gasPriceInWei;
+    // mapping(address => uint256) public depositedGas;
+    // mapping(address => uint256) public gasUsedByUser;
+    // address[] public gasUsers;
+    // mapping(address => bool) public isGasUser;
+    // uint256 public gasPriceInWei;
 
     modifier isAccessible(string memory _activity) {
         require(state[_activity] == State.Open, "Activity is not open");
@@ -73,25 +73,25 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
 
     event Event_15b3i41(uint256 orderId, uint256[] unavailableItemIds);
 
-    event Event_0hk6axb(uint256 orderid);
+    // event Event_0hk6axb(uint256 orderid);
 
     event Event_0hk6axy(uint256 orderid);
 
-    event RefundEvent(string user, uint256 amountRefunded, uint256 gasUsed); // Refund Event
+    event RefundEvent(string user, uint256 amountRefunded); // Refund Event
 
     constructor() {
-        state["Activity_0fun8ap"] = State.Open;
-        state["Activity_0niv12y"] = State.Closed;
-        state["Activity_1vaacll"] = State.Closed;
+        // state["Activity_0fun8ap"] = State.Open;
+        state["Activity_0niv12y"] = State.Open;
+        // state["Activity_1vaacll"] = State.Closed;
         state["Activity_0k0x70l"] = State.Closed;
         state["Activity_1hhx3o3"] = State.Closed;
 
-        activitytoRole["Activity_0fun8ap"] = ["Retailer"];
+        // activitytoRole["Activity_0fun8ap"] = ["Retailer"];
         activitytoRole["Activity_0niv12y"] = ["Customer"];
-        activitytoRole["Activity_1vaacll"] = ["Customer"];
+        // activitytoRole["Activity_1vaacll"] = ["Customer"];
         activitytoRole["Activity_0k0x70l"] = ["Customs"];
         activitytoRole["Activity_1hhx3o3"] = ["Logistics"];
-        activitytoRole["Activity_0nflsru"] = ["Retailer"];
+        // activitytoRole["Activity_0nflsru"] = ["Retailer"];
     }
 
     function setContracts(address[] memory addresses) public {}
@@ -105,9 +105,9 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
     }
 
     //Order Delivered
-    function emit_Event_0hk6axb(uint256 orderid) public {
-        emit Event_0hk6axb(orderid);
-    }
+    // function emit_Event_0hk6axb(uint256 orderid) public {
+    //     emit Event_0hk6axb(orderid);
+    // }
 
     //Custom Clearance
     function emit_Event_0hk6axy(uint256 orderid) public {
@@ -164,22 +164,22 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
     }
 
     //Fund Gas Fees
-    function Activity_0fun8ap()
-        public
-        payable
-        isAccessible("Activity_0fun8ap")
-    {
-        depositedGas[msg.sender] += msg.value;
-        gasPriceInWei = tx.gasprice;
+    // function Activity_0fun8ap()
+    //     public
+    //     payable
+    //     isAccessible("Activity_0fun8ap")
+    // {
+    //     depositedGas[msg.sender] += msg.value;
+    //     gasPriceInWei = tx.gasprice;
 
-        if (!isGasUser[msg.sender]) {
-            gasUsers.push(msg.sender);
-            isGasUser[msg.sender] = true;
-        }
+    //     if (!isGasUser[msg.sender]) {
+    //         gasUsers.push(msg.sender);
+    //         isGasUser[msg.sender] = true;
+    //     }
 
-        state["Activity_0niv12y"] = State.Open;
-        state["Activity_0fun8ap"] = State.Completed;
-    }
+    //     state["Activity_0niv12y"] = State.Open;
+    //     state["Activity_0fun8ap"] = State.Completed;
+    // }
 
     //Order Details
     function Activity_0niv12y(
@@ -188,7 +188,7 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
         bool domestic,
         string memory deliveryAddress
     ) public payable isAccessible("Activity_0niv12y") {
-        uint256 startGas = gasleft();
+        // uint256 startGas = gasleft();
         uint256 total = compute_total(itemIds, quantities);
         uint256 branch = checkXOR_Gateway_06a3ggk(total);
         if ((branch & (1 << 1)) != 0) {
@@ -197,7 +197,7 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
 
             uint256 branch = checkXOR_Gateway_1vn0uda(isAvailable);
             if ((branch & (1 << 0)) != 0) {
-                state["Activity_1vaacll"] = State.Open;
+                revert("End Event reached: Event_0blgw5f, out of stock");
             } else if ((branch & (1 << 1)) != 0) {
                 Activity_13zf3km(total);
                 uint256 branch = checkXOR_Gateway_1p6hag5(
@@ -214,12 +214,12 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
             revert("End Event reached: Event_0blgw7w, undefined");
         }
 
-        if (!isGasUser[msg.sender]) {
-            gasUsers.push(msg.sender);
-            isGasUser[msg.sender] = true;
-        }
+        // if (!isGasUser[msg.sender]) {
+        //     gasUsers.push(msg.sender);
+        //     isGasUser[msg.sender] = true;
+        // }
         state["Activity_0niv12y"] = State.Completed;
-        gasUsedByUser[msg.sender] += (startGas - gasleft()) + 3300;
+        // gasUsedByUser[msg.sender] += (startGas - gasleft()) + 21000 ;
     }
 
     //Create Order
@@ -279,41 +279,41 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
     }
 
     //Modify Items
-    function Activity_1vaacll(
-        uint256 orderId,
-        uint256[] memory itemIds,
-        uint256[] memory quantities
-    ) public payable isAccessible("Activity_1vaacll") {
-        uint256 startGas = gasleft();
-        uint256 total = compute_total(itemIds, quantities);
-        uint256 branch = checkXOR_Gateway_06a3ggk(total);
-        if ((branch & (1 << 0)) != 0) {
-            //Unsufficient ETH
-            revert("End Event reached: Event_0blgw7w, undefined");
-        } else if ((branch & (1 << 1)) != 0) {
-            bool isAvailable = Activity_1ojqh22(orderId, itemIds, quantities);
-            uint256 branch = checkXOR_Gateway_1vn0uda(isAvailable);
-            if ((branch & (1 << 0)) != 0) {
-                state["Activity_1vaacll"] = State.Open;
-            } else if ((branch & (1 << 1)) != 0) {
-                Activity_13zf3km(total);
-                uint256 branch = checkXOR_Gateway_1p6hag5(
-                    orders[orderId].domestic
-                );
-                if ((branch & (1 << 0)) != 0) {
-                    state["Activity_0k0x70l"] = State.Open;
-                } else if ((branch & (1 << 1)) != 0) {
-                    state["Activity_1hhx3o3"] = State.Open;
-                }
-            }
-        }
+    // function Activity_1vaacll(
+    //     uint256 orderId,
+    //     uint256[] memory itemIds,
+    //     uint256[] memory quantities
+    // ) public payable isAccessible("Activity_1vaacll") {
+    //     // uint256 startGas = gasleft();
+    //     uint256 total = compute_total(itemIds, quantities);
+    //     // uint256 branch = checkXOR_Gateway_06a3ggk(total);
+    //     // if ((branch & (1 << 0)) != 0) {
+    //         //Unsufficient ETH
+    //         // revert("End Event reached: Event_0blgw7w, undefined");
+    //     // } else if ((branch & (1 << 1)) != 0) {
+    //         bool isAvailable = Activity_1ojqh22(orderId, itemIds, quantities);
+    //         uint256 branch = checkXOR_Gateway_1vn0uda(isAvailable);
+    //         if ((branch & (1 << 0)) != 0) {
+    //             state["Activity_1vaacll"] = State.Open;
+    //         } else if ((branch & (1 << 1)) != 0) {
+    //             Activity_13zf3km(total);
+    //             uint256 branch = checkXOR_Gateway_1p6hag5(
+    //                 orders[orderId].domestic
+    //             );
+    //             if ((branch & (1 << 0)) != 0) {
+    //                 state["Activity_0k0x70l"] = State.Open;
+    //             } else if ((branch & (1 << 1)) != 0) {
+    //                 state["Activity_1hhx3o3"] = State.Open;
+    //             }
+    //         }
+    //     // }
 
-        if (!isGasUser[msg.sender]) {
-            gasUsers.push(msg.sender);
-            isGasUser[msg.sender] = true;
-        }
-        gasUsedByUser[msg.sender] += (startGas - gasleft()) + 3300;
-    }
+    //     // if (!isGasUser[msg.sender]) {
+    //     //     gasUsers.push(msg.sender);
+    //     //     isGasUser[msg.sender] = true;
+    //     // }
+    //     // gasUsedByUser[msg.sender] += (startGas - gasleft()) + 21000 ;
+    // }
 
     //Make payments
     function Activity_13zf3km(uint256 total) public payable {
@@ -335,121 +335,113 @@ contract Process_1_DefaultContract_Participant_0bc7qxq_Collaboration_81674242 {
     function Activity_0k0x70l(
         uint256 orderId
     ) public payable isAccessible("Activity_0k0x70l") {
-        // Activity_1gto5jv(orderId);
-        emit_Event_0hk6axy(orderId);
+        Activity_1gto5jv(orderId);
+        // emit_Event_0hk6axy(orderId);
         state["Activity_1hhx3o3"] = State.Open;
 
         state["Activity_0k0x70l"] = State.Completed;
     }
 
     //Update Order status
-    // function Activity_1gto5jv(uint256 orderId) public payable {
-    //     require(uint256(state["Activity_0k0x70l"]) == uint256(State.Open));
-    //     orders[orderId].clearance = true;
-    // }
+    function Activity_1gto5jv(uint256 orderId) public payable {
+        require(uint256(state["Activity_0k0x70l"]) == uint256(State.Open));
+        orders[orderId].clearance = true;
+    }
 
     //Order Delivered
     function Activity_1hhx3o3(
         uint256 orderId
     ) public payable isAccessible("Activity_1hhx3o3") {
-        uint256 startGas = gasleft();
-
-        emit_Event_0hk6axb(orderId);
-
-        state["Activity_0nflsru"] = State.Open;
+        Activity_1gto5jr(orderId);
         state["Activity_1hhx3o3"] = State.Completed;
+    }
 
-        if (!isGasUser[msg.sender]) {
-            gasUsers.push(msg.sender);
-            isGasUser[msg.sender] = true;
-        }
-        gasUsedByUser[msg.sender] += (startGas - gasleft()) + 3300;
+    function Activity_1gto5jr(uint256 orderId) public payable {
+        require(uint256(state["Activity_1hhx3o3"]) == uint256(State.Open));
+        orders[orderId].clearance = true;
     }
 
     //Release Escrow
-    function Activity_0nflsru()
-        public
-        payable
-        isAccessible("Activity_0nflsru")
-    {
-        Activity_0g1cqca();
+    // function Activity_0nflsru()
+    //     public
+    //     payable
+    //     isAccessible("Activity_0nflsru")
+    // {
+    //     Activity_0g1cqca();
 
-        state["Activity_0nflsru"] = State.Completed;
-    }
+    //     state["Activity_0nflsru"] = State.Completed;
+    // }
 
-    //Refund Gas
-    function Activity_0g1cqca() public payable {
-        require(state["Activity_0nflsru"] == State.Open, "Activity not open");
+    // //Refund Gas
+    // function Activity_0g1cqca() public payable {
+    //     require(state["Activity_0nflsru"] == State.Open, "Activity not open");
 
-        uint256 totalDeposited = 0;
-        uint256 totalGasUsed = 0;
-        // Sum up deposited funds and gas usage over all gasUsers
-        for (uint256 i = 0; i < gasUsers.length; i++) {
-            address user = gasUsers[i];
-            totalDeposited += depositedGas[user];
-            totalGasUsed += gasUsedByUser[user];
-        }
+    //     uint256 totalDeposited = 0;
+    //     uint256 totalGasUsed = 0;
+    //     // Sum up deposited funds and gas usage over all gasUsers
+    //     for (uint256 i = 0; i < gasUsers.length; i++) {
+    //         address user = gasUsers[i];
+    //         totalDeposited += depositedGas[user];
+    //         totalGasUsed += gasUsedByUser[user];
+    //     }
 
-        // Calculate total gas cost (in wei) using stored gasPriceInWei
-        uint256 totalGasCost = totalGasUsed * gasPriceInWei;
+    //     // Calculate total gas cost (in wei) using stored gasPriceInWei
+    //     uint256 totalGasCost = totalGasUsed * gasPriceInWei;
 
-        if (totalDeposited >= totalGasCost) {
-            // Sufficient funds scenario
+    //     if (totalDeposited >= totalGasCost) {
+    //         // Sufficient funds scenario
 
-            // 1. Refund spenders fully (those who spent gas)
-            for (uint256 i = 0; i < gasUsers.length; i++) {
-                address user = gasUsers[i];
-                if (gasUsedByUser[user] > 0) {
-                    uint256 refundAmount = gasUsedByUser[user] * gasPriceInWei;
-                    if (refundAmount > 0) {
-                        payable(user).transfer(refundAmount);
-                        emit RefundEvent(addressToRole[user], refundAmount, gasUsedByUser[user] * gasPriceInWei); // Emit refund event
-                    }
-                }
-            }
-            // 2. Calculate surplus and refund funders proportionally
-            uint256 surplus = totalDeposited - totalGasCost;
-            for (uint256 i = 0; i < gasUsers.length; i++) {
-                address user = gasUsers[i];
-                if (depositedGas[user] > 0) {
-                    // this user is a funder
-                    uint256 refundShare = (surplus * depositedGas[user]) /
-                        totalDeposited;
-                    if (refundShare > 0) {
-                        payable(user).transfer(refundShare);
-                        emit RefundEvent(addressToRole[user], refundShare, gasUsedByUser[user] * gasPriceInWei); // Emit refund event
-                    }
-                }
-            }
-        } else {
-            // Insufficient funds scenario: distribute the entire deposit proportionally to spenders
-            // (Only users who have consumed gas get a share)
-            for (uint256 i = 0; i < gasUsers.length; i++) {
-                address user = gasUsers[i];
-                if (gasUsedByUser[user] > 0) {
-                    uint256 proportionalRefund = (gasUsedByUser[user] *
-                        gasPriceInWei *
-                        totalDeposited) / totalGasCost;
-                    if (proportionalRefund > 0) {
-                        payable(user).transfer(proportionalRefund);
-                        emit RefundEvent(
-                            addressToRole[user],
-                            proportionalRefund, gasUsedByUser[user] * gasPriceInWei
-                        ); // Emit refund event
-                    }
-                }
-            }
-        }
+    //         // 1. Refund spenders fully (those who spent gas)
+    //         for (uint256 i = 0; i < gasUsers.length; i++) {
+    //             address user = gasUsers[i];
+    //             if (gasUsedByUser[user] > 0) {
+    //                 uint256 refundAmount = gasUsedByUser[user] * gasPriceInWei;
+    //                 if (refundAmount > 0) {
+    //                     payable(user).transfer(refundAmount);
+    //                     emit RefundEvent(addressToRole[user], refundAmount); // Emit refund event
+    //                 }
+    //             }
+    //         }
+    //         // 2. Calculate surplus and refund funders proportionally
+    //         uint256 surplus = totalDeposited - totalGasCost;
+    //         for (uint256 i = 0; i < gasUsers.length; i++) {
+    //             address user = gasUsers[i];
+    //             if (depositedGas[user] > 0) {
+    //                 // this user is a funder
+    //                 uint256 refundShare = (surplus * depositedGas[user]) /
+    //                     totalDeposited;
+    //                 if (refundShare > 0) {
+    //                     payable(user).transfer(refundShare);
+    //                     emit RefundEvent(addressToRole[user], refundShare); // Emit refund event
+    //                 }
+    //             }
+    //         }
+    //     } else {
+    //         // Insufficient funds scenario: distribute the entire deposit proportionally to spenders
+    //         // (Only users who have consumed gas get a share)
+    //         for (uint256 i = 0; i < gasUsers.length; i++) {
+    //             address user = gasUsers[i];
+    //             if (gasUsedByUser[user] > 0) {
+    //                 uint256 proportionalRefund = (gasUsedByUser[user] *
+    //                     gasPriceInWei *
+    //                     totalDeposited) / totalGasCost;
+    //                 if (proportionalRefund > 0) {
+    //                     payable(user).transfer(proportionalRefund);
+    //                     emit RefundEvent(addressToRole[user], proportionalRefund); // Emit refund event
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        // Clear the tracking for next use
-        for (uint256 i = 0; i < gasUsers.length; i++) {
-            address user = gasUsers[i];
-            depositedGas[user] = 0;
-            gasUsedByUser[user] = 0;
-            isGasUser[user] = false;
-        }
-        delete gasUsers;
-    }
+    //     // Clear the tracking for next use
+    //     for (uint256 i = 0; i < gasUsers.length; i++) {
+    //         address user = gasUsers[i];
+    //         depositedGas[user] = 0;
+    //         gasUsedByUser[user] = 0;
+    //         isGasUser[user] = false;
+    //     }
+    //     delete gasUsers;
+    // }
 
     function compute_total(
         uint256[] memory itemIds,
